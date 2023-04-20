@@ -1,4 +1,6 @@
 # write me a github action that deploy a WCF service to App Service
+name: Deploy WCF Service to Azure App Service
+
 on:
   push:
     branches:
@@ -6,7 +8,7 @@ on:
     paths:
       - 'src/SoapLegacyService/**'
     workflow_dispatch:
-    
+
 env:
   AZURE_WEBAPP_NAME: ${{ secrets.WEBAPP_NAME }}
   AZURE_WEBAPP_PACKAGE_PATH: 'src/SoapLegacyService'
