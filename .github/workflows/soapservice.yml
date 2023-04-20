@@ -27,14 +27,14 @@ jobs:
 
       - name: NuGet to restore dependencies as well as project-specific tools that are specified in the project file
         run: nuget restore
-        working-directory: AZURE_WEBAPP_PACKAGE_PATH
-        
+        working-directory: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
       - name: Run MSBuild
         run: msbuild .\SoapLegacyService.sln
-        working-directory: AZURE_WEBAPP_PACKAGE_PATH
+        working-directory: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
         
       - name: Login via Az module
         uses: azure/login@v1
