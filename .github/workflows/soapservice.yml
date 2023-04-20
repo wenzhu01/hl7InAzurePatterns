@@ -5,6 +5,8 @@ on:
       - master
     paths:
       - 'src/SoapLegacyService/**'
+    workflow_dispatch:
+    
 env:
   AZURE_WEBAPP_NAME: ${{ secrets.WEBAPP_NAME }}
   AZURE_WEBAPP_PACKAGE_PATH: 'src/SoapLegacyService'
