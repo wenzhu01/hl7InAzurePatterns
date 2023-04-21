@@ -7,9 +7,7 @@ char END_OF_BLOCK = '\u001c';
 char START_OF_BLOCK = '\u000b';
 char CARRIAGE_RETURN = (char)13;
 
-
 TcpClient tcpClient = new TcpClient();
-NetworkStream networkStream = null ;
 
 var testHl7MessageToTransmit = new StringBuilder();
 testHl7MessageToTransmit.Append(START_OF_BLOCK)
@@ -32,50 +30,17 @@ try
 
     Console.WriteLine("Connected to server");
 
-    // Get a client stream for reading and writing.
-    networkStream = tcpClient.GetStream();
-
-    //use UTF-8 and either 8-bit encoding due to MLLP-related recommendations
-    //var messageToTransmit = Encoding.UTF8.GetBytes(testHl7MessageToTransmit.ToString());
     var byteBuffer = Encoding.UTF8.GetBytes(testHl7MessageToTransmit.ToString());
 
-    //send a message through this connection using the IO stream
-    networkStream.Write(byteBuffer, 0, byteBuffer.Length);    
+    await tcpClient.GetStream().WriteAsync(byteBuffer, 0, byteBuffer.Length);
 
     Console.WriteLine("Data was sent data to server successfully....");
 
-    var receiveMessageByteBuffer = Encoding.UTF8.GetBytes(testHl7MessageToTransmit.ToString());
-    var bytesReceivedFromServer = await networkStream.ReadAsync(receiveMessageByteBuffer, 0, receiveMessageByteBuffer.Length);
+    var buffer = new byte[1_024];
+    var received = await tcpClient.GetStream().ReadAsync(buffer, 0, buffer.Length);
+    var response = Encoding.UTF8.GetString(buffer, 0, received);
 
-    while (bytesReceivedFromServer > 0)
-    {
-        if (networkStream.CanRead)
-        {
-            bytesReceivedFromServer = await networkStream.ReadAsync(receiveMessageByteBuffer, 0, receiveMessageByteBuffer.Length);
-            if (bytesReceivedFromServer == 0)
-            {
-                break;
-            }
-        }
-        
-    }
-    var receivedMessage = Encoding.UTF8.GetString(receiveMessageByteBuffer);
-
-    Console.WriteLine("Received message from server: {0}", receivedMessage);
-    // var bytesReceivedFromServer = await networkStream.ReadAsync(byteBuffer, 0, byteBuffer.Length);
-    // // Our server for this example has been designed to echo back the message
-    // // keep reading from this stream until the message is echoed back
-    // while (bytesReceivedFromServer < byteBuffer.Length)
-    // {
-    //     bytesReceivedFromServer = await networkStream.ReadAsync(byteBuffer, 0, byteBuffer.Length);
-    //     if (bytesReceivedFromServer == 0)
-    //     {
-    //         //exit the reading loop since there is no more data
-    //         break;
-    //     }
-    // }  
-
-    // var receivedMessage = Encoding.UTF8.GetString(byteBuffer);
+    Console.WriteLine("Received message from server: {0}", response);
 
     Console.WriteLine("Press any key to exit program...");
     Console.ReadLine();      
@@ -87,6 +52,5 @@ catch (System.Exception ex)
 }
 finally 
 {
-    networkStream?.Close();
     tcpClient.Close();
 }
