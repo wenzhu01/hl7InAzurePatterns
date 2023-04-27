@@ -23,19 +23,25 @@ namespace Contoso
 
         [FunctionName("SendHl7Message")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+            [ServiceBusTrigger("topic01", "test", Connection = "pochl7bus_SERVICEBUS",IsSessionsEnabled = false)]string mySbMsg,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
             
             try
             {
-                int port = Environment.GetEnvironmentVariable("port") != null ? int.Parse(Environment.GetEnvironmentVariable("port")) : 1180;
+                int port =21001; //Environment.GetEnvironmentVariable("port") != null ? int.Parse(Environment.GetEnvironmentVariable("port")) : 1180;
 
                 log.LogInformation("Client connecting on port: " + port);
 
                 var testHl7MessageToTransmit = new StringBuilder();
+
+                 log.LogInformation( string.Concat("dt:",DateTime.Now.ToString ("yyyyMMdd-HH:mm:ss.ffff"), "  mySbMsg:",mySbMsg) );
                 testHl7MessageToTransmit.Append(START_OF_BLOCK)
+                        .Append(mySbMsg.Trim())
+                        .Append(END_OF_BLOCK)
+                        .Append(CARRIAGE_RETURN);
+                        /*
                         .Append("MSH|^~\\&|AcmeHIS|StJohn|CATH|StJohn|20061019172719||ORM^O01|MSGID12349876|P|2.3")
                         .Append(CARRIAGE_RETURN)
                         .Append("PID|||20301||Durden^Tyler^^^Mr.||19700312|M|||88 Punchward Dr.^^Los Angeles^CA^11221^USA|||||||")
@@ -46,8 +52,7 @@ namespace Contoso
                         .Append(CARRIAGE_RETURN)
                         .Append("OBR|1|20061019172719||76770^Ultrasound: retroperitoneal^C4|||12349876")
                         .Append(CARRIAGE_RETURN)
-                        .Append(END_OF_BLOCK)
-                        .Append(CARRIAGE_RETURN);
+                        */
 
                 TcpClient tcpClient = new ();
 
@@ -60,7 +65,9 @@ namespace Contoso
 
                 var buffer = new byte[1_024];
                 var received = await tcpClient.GetStream().ReadAsync(buffer, 0, buffer.Length);
-                var response = Encoding.UTF8.GetString(buffer, 0, received);                                     
+                var response = Encoding.UTF8.GetString(buffer, 0, received);  
+
+
 
             }
             catch (System.Exception ex)

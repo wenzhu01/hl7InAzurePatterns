@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-
+using Azure.Messaging.ServiceBus;
 namespace mllpServer;
 
 public interface IMllpServer
@@ -32,6 +32,11 @@ public class MllpServer : IMllpServer
 
     private readonly char FIELD_DELIMITER = '|';
 
+// the client that owns the connection and can be used to create senders and receivers
+private ServiceBusClient client;
+
+// the sender used to publish messages to the queue
+private ServiceBusSender sender;
 
     public MllpServer(IConfiguration configuration, ILogger<MllpServer> logger)
     {
@@ -42,6 +47,14 @@ public class MllpServer : IMllpServer
 
         _receivedByteBuffer = new byte[200];
         _logger = logger;
+
+        var clientOptions = new ServiceBusClientOptions()
+        { 
+            TransportType = ServiceBusTransportType.AmqpWebSockets
+        };
+        
+        sender = client.CreateSender("topic01");
+
     }
 
     public void Initialize()
@@ -95,10 +108,12 @@ public class MllpServer : IMllpServer
                     {
                         //if both start and end of block are recognized in the data transmitted, then extract the entire message
                         var hl7MessageData = hl7Data.Substring(startOfMllpEnvelope + 1, end - startOfMllpEnvelope);
-
+//string serializedMsg = JsonConvert.SerializeObject(hl7MessageData); 
+var msg = new ServiceBusMessage(hl7MessageData); //serializedMsg); 
+await sender.SendMessageAsync(msg);
                         //create a HL7 acknowledgement message
                         var ackMessage = GetSimpleAcknowledgementMessage(hl7MessageData);
-
+                        hl7Data="";
                         Console.WriteLine(ackMessage);
 
                         //echo the received data back to the client

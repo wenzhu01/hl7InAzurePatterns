@@ -46,7 +46,7 @@ while(true)
                 await networkStream.WriteAsync(receivedByteBuffer, 0, bytesReceived);
             }
 
-            totalBytesReceivedFromClient += bytesReceived;
+            //totalBytesReceivedFromClient += bytesReceived;
         }   
 
         Console.WriteLine("Echoed {0} bytes back to the client.", totalBytesReceivedFromClient);     
